@@ -70,22 +70,26 @@ if "!HAS_CHANGES!"=="" (
     exit /b 0
 )
 
-:: 4. Meminta pesan commit (opsional)
+:: 4. Hitung nomor commit otomatis (Updated Project 1, 2, 3, dst.)
+set /a NEXT_NUM=1
+for /f "tokens=*" %%C in ('"!GIT_EXE!" rev-list --count HEAD 2^>nul') do (
+    set /a NEXT_NUM=%%C + 1
+)
+
+:: 5. Meminta pesan commit (opsional)
 echo.
 set "COMMIT_MSG="
-set /p COMMIT_MSG="Masukkan pesan commit [Tekan Enter untuk pesan otomatis]: "
+set /p COMMIT_MSG="Masukkan pesan commit [Tekan Enter untuk 'Updated Project !NEXT_NUM!']: "
 
 if "!COMMIT_MSG!"=="" (
-    for /f "tokens=2 delims==" %%I in ('wmic os get localdatetime /value') do set dt=%%I
-    set "DATETIME=!dt:~0,4!-!dt:~4,2!-!dt:~6,2! !dt:~8,2!:!dt:~10,2!:!dt:~12,2!"
-    set "COMMIT_MSG=Pembaruan proyek otomatis: !DATETIME!"
+    set "COMMIT_MSG=Updated Project !NEXT_NUM!"
 )
 
 echo.
 echo [*] Melakukan commit dengan pesan: "!COMMIT_MSG!"
 "!GIT_EXE!" commit -m "!COMMIT_MSG!"
 
-:: 5. Melakukan Push ke GitHub
+:: 6. Melakukan Push ke GitHub
 echo.
 echo [*] Mengunggah (Push) ke GitHub (branch: main)...
 "!GIT_EXE!" push -u origin main
@@ -99,6 +103,7 @@ if %errorlevel% equ 0 (
     echo.
     echo ======================================================================
     echo   [BERHASIL] Seluruh perubahan berhasil di-push ke GitHub!
+    echo   Commit: "!COMMIT_MSG!"
     echo ======================================================================
 ) else (
     echo.

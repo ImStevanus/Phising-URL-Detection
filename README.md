@@ -46,13 +46,13 @@ Ikuti langkah-langkah berikut untuk menjalankan aplikasi pada komputer/laptop An
 Buka aplikasi **PowerShell** atau **Command Prompt** (Terminal).
 
 ### 2. Berpindah ke Direktori Proyek (dari Folder Downloads)
-Karena nama folder proyek memiliki tanda kurung siku `[ ... ]`, gunakan perintah `Set-Location -LiteralPath` di bawah ini agar path terbaca dengan benar:
+Buka terminal dan masuk ke folder `Project`:
 ```powershell
-Set-Location -LiteralPath "$HOME\Downloads\[Semester 3] UAS KEAMANAN DATA - Kelompok Alra, Stevanus\Project"
+cd "$HOME\Downloads\Phising URL Detection\Project"
 ```
 *(Atau jika menggunakan Command Prompt biasa / cmd.exe):*
 ```cmd
-cd /d "%USERPROFILE%\Downloads\[Semester 3] UAS KEAMANAN DATA - Kelompok Alra, Stevanus\Project"
+cd /d "%USERPROFILE%\Downloads\Phising URL Detection\Project"
 ```
 
 ### 3. Instalasi Dependensi Pustaka (Requirements)
@@ -71,21 +71,12 @@ Aplikasi web akan otomatis terbuka di browser default Anda pada alamat:
 
 ---
 
-## 🔄 Sinkronisasi dan Update ke GitHub (Sekali Klik)
-Untuk memperbarui repositori GitHub setiap kali Anda melakukan perubahan berkas:
-- Cukup **klik dua kali (*double-click*)** pada file:  
-  📁 **`push_to_github.bat`**
-- Skrip ini akan secara otomatis mendeteksi Git, menambahkan perubahan (`git add .`), membuat commit, dan mengunggah (*push*) pembaruan langsung ke repositori GitHub Anda.
-
----
-
 ## 📁 Struktur Direktori
 ```text
 Project/
 ├── app.py                          # Skrip utama antarmuka Streamlit
 ├── requirements.txt                # Daftar pustaka Python yang dibutuhkan
 ├── README.md                       # Dokumentasi dan panduan eksekusi
-├── push_to_github.bat              # Skrip otomasi push perubahan ke GitHub sekali klik
 ├── .gitignore                      # Konfigurasi file yang diabaikan Git
 ├── Project_Keamanan_Data.ipynb     # Notebook analisis, EDA, dan pelatihan model
 ├── phishing_url_knn_model.pkl      # Artefak pipeline model unggulan (KNN)
