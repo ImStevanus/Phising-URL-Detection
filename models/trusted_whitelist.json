@@ -1,0 +1,121 @@
+[
+  {
+    "domain": "google.com",
+    "organization": "Google LLC",
+    "category": "Mesin Pencari & Cloud",
+    "status": "Verified Global Entity",
+    "ssl_default": "HTTPS / TLS 1.3"
+  },
+  {
+    "domain": "google.co.id",
+    "organization": "Google Indonesia",
+    "category": "Mesin Pencari Lokal",
+    "status": "Verified National Entity",
+    "ssl_default": "HTTPS / TLS 1.3"
+  },
+  {
+    "domain": "youtube.com",
+    "organization": "YouTube LLC (Google Platform)",
+    "category": "Media & Streaming",
+    "status": "Verified Global Entity",
+    "ssl_default": "HTTPS / TLS 1.3"
+  },
+  {
+    "domain": "wikipedia.org",
+    "organization": "Wikimedia Foundation",
+    "category": "Edukasi & Ensiklopedia Global",
+    "status": "Verified Global Entity",
+    "ssl_default": "HTTPS / TLS 1.3"
+  },
+  {
+    "domain": "github.com",
+    "organization": "GitHub Inc. (Microsoft Corp)",
+    "category": "Platform Developer & Open Source",
+    "status": "Verified Global Entity",
+    "ssl_default": "HTTPS / TLS 1.3"
+  },
+  {
+    "domain": "microsoft.com",
+    "organization": "Microsoft Corporation",
+    "category": "Teknologi & Cloud Enterprise",
+    "status": "Verified Global Entity",
+    "ssl_default": "HTTPS / TLS 1.3"
+  },
+  {
+    "domain": "apple.com",
+    "organization": "Apple Inc.",
+    "category": "Perangkat Keras & Layanan Cloud",
+    "status": "Verified Global Entity",
+    "ssl_default": "HTTPS / TLS 1.3"
+  },
+  {
+    "domain": "amazon.com",
+    "organization": "Amazon Technologies Inc.",
+    "category": "E-Commerce & Cloud AWS",
+    "status": "Verified Global Entity",
+    "ssl_default": "HTTPS / TLS 1.3"
+  },
+  {
+    "domain": "bca.co.id",
+    "organization": "PT Bank Central Asia Tbk",
+    "category": "Perbankan Nasional Indonesia",
+    "status": "Verified Financial Entity (OJK/BI)",
+    "ssl_default": "HTTPS / EV SSL"
+  },
+  {
+    "domain": "bankmandiri.co.id",
+    "organization": "PT Bank Mandiri (Persero) Tbk",
+    "category": "Perbankan Nasional BUMN",
+    "status": "Verified Financial Entity (OJK/BI)",
+    "ssl_default": "HTTPS / EV SSL"
+  },
+  {
+    "domain": "bri.co.id",
+    "organization": "PT Bank Rakyat Indonesia (Persero) Tbk",
+    "category": "Perbankan Nasional BUMN",
+    "status": "Verified Financial Entity (OJK/BI)",
+    "ssl_default": "HTTPS / EV SSL"
+  },
+  {
+    "domain": "bni.co.id",
+    "organization": "PT Bank Negara Indonesia (Persero) Tbk",
+    "category": "Perbankan Nasional BUMN",
+    "status": "Verified Financial Entity (OJK/BI)",
+    "ssl_default": "HTTPS / EV SSL"
+  },
+  {
+    "domain": "detik.com",
+    "organization": "Detikcom (Trans Media)",
+    "category": "Portal Berita Nasional",
+    "status": "Verified Media Entity",
+    "ssl_default": "HTTPS / TLS 1.3"
+  },
+  {
+    "domain": "kompas.com",
+    "organization": "Kompas Cyber Media",
+    "category": "Portal Berita Nasional",
+    "status": "Verified Media Entity",
+    "ssl_default": "HTTPS / TLS 1.3"
+  },
+  {
+    "domain": "steampowered.com",
+    "organization": "Valve Corporation (Steam)",
+    "category": "Platform Distribusi Game Sah",
+    "status": "Verified Global Entity",
+    "ssl_default": "HTTPS / TLS 1.3"
+  },
+  {
+    "domain": "kemkes.go.id",
+    "organization": "Kementerian Kesehatan Republik Indonesia",
+    "category": "Pemerintahan Republik Indonesia",
+    "status": "Verified Government Entity (.go.id)",
+    "ssl_default": "HTTPS / TLS 1.3"
+  },
+  {
+    "domain": "kemdikbud.go.id",
+    "organization": "Kementerian Pendidikan dan Kebudayaan RI",
+    "category": "Pemerintahan Republik Indonesia",
+    "status": "Verified Government Entity (.go.id)",
+    "ssl_default": "HTTPS / TLS 1.3"
+  }
+]
