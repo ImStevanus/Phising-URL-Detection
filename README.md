@@ -46,14 +46,26 @@ Ikuti langkah-langkah berikut untuk menjalankan aplikasi pada komputer/laptop An
 Buka aplikasi **PowerShell** atau **Command Prompt** (Terminal).
 
 ### 2. Berpindah ke Direktori Proyek (dari Folder Downloads)
-Buka terminal dan masuk ke folder `Project`:
-```powershell
-cd "$HOME\Downloads\Phising URL Detection\Project"
-```
-*(Atau jika menggunakan Command Prompt biasa / cmd.exe):*
-```cmd
-cd /d "%USERPROFILE%\Downloads\Phising URL Detection\Project"
-```
+Buka terminal dan masuk ke folder hasil unduhan/ekstraksi dari GitHub:
+- **Jika mengunduh via *Download ZIP*:**
+  ```powershell
+  cd "$HOME\Downloads\Phising-URL-Detection-main"
+  ```
+  *(Atau di Command Prompt / cmd.exe):*
+  ```cmd
+  cd /d "%USERPROFILE%\Downloads\Phising-URL-Detection-main"
+  ```
+
+- **Jika mengunduh via *git clone*:**
+  ```powershell
+  cd "$HOME\Downloads\Phising-URL-Detection"
+  ```
+  *(Atau di Command Prompt / cmd.exe):*
+  ```cmd
+  cd /d "%USERPROFILE%\Downloads\Phising-URL-Detection"
+  ```
+
+---
 
 ### 3. Instalasi Dependensi Pustaka (Requirements)
 Pastikan Anda menggunakan Python 3.10+ lalu pasang seluruh pustaka yang dibutuhkan:
@@ -73,7 +85,7 @@ Aplikasi web akan otomatis terbuka di browser default Anda pada alamat:
 
 ## 📁 Struktur Direktori
 ```text
-Project/
+Phising-URL-Detection-main/
 ├── app.py                          # Skrip utama antarmuka Streamlit
 ├── requirements.txt                # Daftar pustaka Python yang dibutuhkan
 ├── README.md                       # Dokumentasi dan panduan eksekusi
