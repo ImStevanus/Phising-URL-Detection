@@ -49,11 +49,15 @@ if exist ".git" goto :git_ready
 echo [*] Folder ini belum terhubung dengan Git [.git belum ada].
 echo [*] Menyiapkan inisialisasi dan sinkronisasi ke repositori GitHub...
 echo.
+set "REPO_URL=https://github.com/ImStevanus/Phising-URL-Detection.git"
 echo Masukkan URL GitHub repository [Tekan Enter untuk default]:
-echo Default: https://github.com/ImStevanus/Phising-URL-Detection.git
-set "REPO_URL="
-set /p REPO_URL="URL GitHub: "
-if "!REPO_URL!"=="" set "REPO_URL=https://github.com/ImStevanus/Phising-URL-Detection.git"
+echo Default: !REPO_URL!
+set "USER_INPUT_URL="
+set /p USER_INPUT_URL="URL GitHub: "
+if defined USER_INPUT_URL (
+    set "CLEAN_URL=!USER_INPUT_URL: =!"
+    if not "!CLEAN_URL!"=="" set "REPO_URL=!USER_INPUT_URL!"
+)
 
 echo.
 echo [*] Menginisialisasi Git repository...
@@ -114,14 +118,14 @@ for /f "tokens=*" %%C in ('"!GIT_EXE!" rev-list --count HEAD 2^>nul') do (
 )
 
 :: 5. Meminta pesan commit
-echo Tekan [Enter] untuk menggunakan judul otomatis: 'Updated Project !NEXT_NUM!'
-set "COMMIT_MSG="
-set /p COMMIT_MSG="Atau ketik pesan commit kustom: "
+set "COMMIT_MSG=Updated Project !NEXT_NUM!"
+echo Tekan [Enter] untuk menggunakan judul otomatis: '!COMMIT_MSG!'
+set "USER_INPUT_MSG="
+set /p USER_INPUT_MSG="Atau ketik pesan commit kustom: "
 
-:: Bersihkan spasi kosong; jika kosong pakai default
-set "CHECK_EMPTY=!COMMIT_MSG: =!"
-if "!CHECK_EMPTY!"=="" (
-    set "COMMIT_MSG=Updated Project !NEXT_NUM!"
+if defined USER_INPUT_MSG (
+    set "CLEAN_MSG=!USER_INPUT_MSG: =!"
+    if not "!CLEAN_MSG!"=="" set "COMMIT_MSG=!USER_INPUT_MSG!"
 )
 
 echo.
