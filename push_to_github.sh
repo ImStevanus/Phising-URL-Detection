@@ -17,51 +17,89 @@ fi
 
 # 2. Cek apakah folder merupakan repository git
 if [ ! -d ".git" ]; then
-    echo "[!] Repository lokal (.git) belum ditemukan."
-    echo "Silakan masukkan URL repository GitHub Anda:"
-    read -r REPO_URL
+    echo "[*] Folder ini belum terhubung dengan Git (.git belum ada)."
+    echo "[*] Menyiapkan inisialisasi dan sinkronisasi ke repositori GitHub..."
+    echo ""
+    read -p "Masukkan URL GitHub repository [Tekan Enter untuk default: https://github.com/ImStevanus/Phising-URL-Detection.git]: " REPO_URL
     if [ -z "$REPO_URL" ]; then
-        echo "[ERROR] URL GitHub tidak boleh kosong!"
-        exit 1
+        REPO_URL="https://github.com/ImStevanus/Phising-URL-Detection.git"
     fi
     git init
     git branch -M main
     git remote add origin "$REPO_URL"
     echo "[OK] Remote origin diatur ke: $REPO_URL"
+    
+    echo "[*] Mengambil informasi dan riwayat dari GitHub..."
+    if git fetch origin main 2>/dev/null; then
+        echo "[*] Menyelaraskan status awal dengan GitHub branch main..."
+        git reset origin/main 2>/dev/null
+    fi
+    echo ""
 fi
 
 # 3. Tambahkan semua perubahan termasuk file yang dihapus
-echo "[*] Memeriksa perubahan dan file terhapus (git add -A)..."
+echo "[*] Memeriksa perubahan, file baru, dan file yang dihapus..."
 git add -A
 
 if git diff --cached --quiet; then
     echo ""
-    echo "[INFO] Tidak ada file baru, perubahan, atau penghapusan yang perlu di-push."
-    echo "Status repositori sudah sinkron dengan GitHub!"
+    echo "======================================================================"
+    echo "  [INFO] Status repositori lokal sudah 100% sinkron dengan GitHub."
+    echo "  Tidak ada file baru, file berubah, atau file sampah yang dihapus."
+    echo "======================================================================"
+    echo ""
     exit 0
 fi
 
-# 4. Hitung nomor commit
+# Tampilkan rincian file yang berubah / dihapus
+echo ""
+echo "[*] Rincian file yang akan disinkronkan ke GitHub:"
+echo "----------------------------------------------------------------------"
+git status --short
+echo "----------------------------------------------------------------------"
+echo ""
+
+# 4. Hitung nomor commit otomatis
 COUNT=$(git rev-list --count HEAD 2>/dev/null || echo 0)
 NEXT_NUM=$((COUNT + 1))
 
-# 5. Pesan commit
-echo ""
-read -p "Masukkan pesan commit [Tekan Enter untuk 'Updated Project $NEXT_NUM']: " COMMIT_MSG
+# 5. Meminta pesan commit
+echo "Tekan [Enter] untuk menggunakan judul otomatis: 'Updated Project $NEXT_NUM'"
+read -p "Atau ketik pesan commit kustom: " COMMIT_MSG
 if [ -z "$COMMIT_MSG" ]; then
     COMMIT_MSG="Updated Project $NEXT_NUM"
 fi
 
-echo "[*] Melakukan commit: '$COMMIT_MSG'"
+echo ""
+echo "[*] Menyimpan commit lokal: '$COMMIT_MSG'"
 git commit -m "$COMMIT_MSG"
 
 # 6. Push ke GitHub
-echo "[*] Mengunggah (Push) ke GitHub..."
-if git push -u origin main; then
+echo ""
+echo "[*] Mengunggah (Push) perubahan ke GitHub branch main..."
+if git push origin main; then
+    PUSH_OK=1
+elif git pull --rebase origin main && git push -u origin main; then
+    PUSH_OK=1
+elif git push -u origin master; then
+    PUSH_OK=1
+else
+    PUSH_OK=0
+fi
+
+if [ "$PUSH_OK" -eq 1 ]; then
+    echo ""
     echo "======================================================================"
     echo "  [BERHASIL] Seluruh perubahan berhasil di-push ke GitHub!"
-    echo "  Commit: '$COMMIT_MSG'"
+    echo "  - File baru dan perubahan telah terunggah."
+    echo "  - File yang tidak ada di folder lokal telah dihapus dari GitHub."
+    echo "  - Judul Commit: '$COMMIT_MSG'"
     echo "======================================================================"
 else
-    git push -u origin master
+    echo ""
+    echo "======================================================================"
+    echo "  [PERHATIAN] Terjadi kendala saat push ke GitHub."
+    echo "  Pastikan koneksi internet aktif dan kredensial login tersedia."
+    echo "======================================================================"
 fi
+echo ""
