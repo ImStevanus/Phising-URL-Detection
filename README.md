@@ -1,6 +1,6 @@
 # Phishing Shield - Deteksi Phishing URL Berbasis Machine Learning
 Proyek Ujian Akhir Semester (UAS) Mata Kuliah **Keamanan Data (DSF01)**  
-Program Artificial Intelligence - Semester 3
+Program Studi Artificial Intelligence - Semester 3
 
 ### 👥 Anggota Kelompok (Kelompok 1):
 - **38250029** - Stevanus
