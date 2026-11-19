@@ -21,16 +21,18 @@ Aplikasi juga dilengkapi dengan **Arsitektur Hybrid (Defense-in-Depth)** melalui
    - Menyajikan klasifikasi risiko 3-tingkat yang transparan: **AMAN (Risiko Rendah)**, **WASPADA (Risiko Moderat)**, dan **BAHAYA / TINGGI (Blokir)**.
    - Menampilkan metrik komprehensif: Probabilitas Phishing, Ambang Batas Terkalibrasi (Threshold), dan Latensi Inferensi instan dalam milidetik (ms).
    - Tombol preset sampel cepat untuk mempermudah demonstrasi.
-2. **Mesin Penalaran Heuristik (*Reasoning Engine*):**
-   - Mengidentifikasi indikator ancaman spesifik pada URL, seperti penggunaan alamat IP langsung, keberadaan kata kunci sensitif perbankan, tanda hubung mencurigakan (*typosquatting*), subdomain bertingkat, pemendek URL, domain punycode (`xn--`), maupun ketiadaan HTTPS.
-3. **Mode Toggle Whitelist (Arsitektur Hybrid):**
+2. **Slider Ambang Batas Interaktif & Mode Whitelist (Defense-in-Depth):**
+   - Dilengkapi slider pengatur ambang probabilitas operasional secara dinamis (default terkalibrasi `0.880` untuk target recall &ge; 98%).
    - Mode pertahanan berlapis (*Defense-in-Depth*) yang memverifikasi domain resmi bereputasi tinggi bersama model ML leksikal untuk mengeliminasi *False Positive* pada situs-situs populer.
+3. **Mesin Penalaran Heuristik (*Reasoning Engine*):**
+   - Mengidentifikasi indikator ancaman spesifik pada URL, seperti penggunaan alamat IP langsung, keberadaan kata kunci sensitif perbankan, tanda hubung mencurigakan (*typosquatting*), subdomain bertingkat, pemendek URL, domain punycode (`xn--`), maupun ketiadaan HTTPS.
 4. **Rincian Ekstraksi 31 Fitur Leksikal:**
    - Tabel visual interaktif yang menganalisis 31 karakteristik struktural URL lengkap beserta kategori fitur, nilai aktual, status indikator risiko, dan relevansi keamanannya.
 5. **Visualisasi Data Latih & Evaluasi Model ML:**
    - Donut chart distribusi kelas alami (504.932 URL: 68.5% Legitimate vs 31.5% Phishing) tanpa *undersampling* buatan.
+   - Heatmap interaktif *Confusion Matrix* pada data uji independen 96.031 URL (TN: 71.970, FP: 59, FN: 544, TP: 23.458) dengan Precision 99.75% dan Recall 97.73%.
    - Diagram *Permutation Feature Importance* (12 fitur paling berpengaruh pada data uji).
-   - Tabel perbandingan komparatif validasi silang bebas kebocoran domain (*GroupKFold 3 lipatan*): HistGradientBoosting, Extra Trees, Random Forest, TF-IDF n-gram karakter + LogReg, Logistic Regression, dan Baseline k-NN.
+   - Tabel perbandingan komparatif validasi silang bebas kebocoran domain (*GroupKFold 3 lipatan*): HistGradientBoosting (Winner), Extra Trees, Random Forest, TF-IDF n-gram karakter + LogReg, Logistic Regression, dan Baseline k-NN.
    - Analisis *Base Rate Fallacy* & simulasi Teorema Bayes pada berbagai tingkat prevalensi dunia nyata (50%, 30%, 10%, 5%, 1%).
    - Studi kasus ablasi fitur jalan pintas (`has_https` & `has_www`).
 6. **Dokumentasi Pengujian Kasus QA:**
