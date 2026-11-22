@@ -357,15 +357,11 @@ if "current_page" not in st.session_state:
 
 if "current_threshold" not in st.session_state:
     st.session_state["current_threshold"] = calibrated_thr
-if "sb_thresh_slider" not in st.session_state:
-    st.session_state["sb_thresh_slider"] = calibrated_thr
 if "tab_thresh_slider" not in st.session_state:
     st.session_state["tab_thresh_slider"] = calibrated_thr
 
 if "use_whitelist" not in st.session_state:
     st.session_state["use_whitelist"] = False  # Default: OFF (Sesuai Permintaan)
-if "sb_wl_toggle" not in st.session_state:
-    st.session_state["sb_wl_toggle"] = False
 if "tab_wl_toggle" not in st.session_state:
     st.session_state["tab_wl_toggle"] = False
 
@@ -401,46 +397,10 @@ if st.session_state["current_page"] == "app":
         st.write("**Algoritma:** HistGradientBoosting")
         st.write("**Dimensi Fitur:** 31 Fitur Leksikal")
         st.write("**Ukuran Artefak:** 0.21 MB (Ultra-Ringan)")
-
-        def _sync_sb_thr():
-            st.session_state["current_threshold"] = st.session_state["sb_thresh_slider"]
-            st.session_state["tab_thresh_slider"] = st.session_state["sb_thresh_slider"]
-
-        sb_thr = st.slider(
-            "Ambang Batas Klasifikasi (Threshold):",
-            min_value=0.10,
-            max_value=0.98,
-            value=float(st.session_state["current_threshold"]),
-            step=0.01,
-            key="sb_thresh_slider",
-            on_change=_sync_sb_thr,
-            help=f"Ambang default terkalibrasi adalah {calibrated_thr:.3f} (menjamin recall {target_rec*100:.0f}% pada OOF data latih)."
-        )
-
-        if sb_thr == calibrated_thr:
-            st.success(f"🎯 Ambang Terkalibrasi: `{sb_thr:.3f}` (Recall: {target_rec * 100:.0f}%)")
-        else:
-            st.warning(f"⚠️ Ambang Kustom: `{sb_thr:.3f}` (Bawaan: `{calibrated_thr:.3f}`)")
-
-        st.markdown("---")
-        st.subheader("🛡️ Arsitektur Pertahanan (Hybrid)")
-
-        def _sync_sb_wl():
-            st.session_state["use_whitelist"] = st.session_state["sb_wl_toggle"]
-            st.session_state["tab_wl_toggle"] = st.session_state["sb_wl_toggle"]
-
-        sb_wl = st.toggle(
-            "Aktifkan Whitelist Domain (Defense-in-Depth)",
-            value=bool(st.session_state["use_whitelist"]),
-            key="sb_wl_toggle",
-            on_change=_sync_sb_wl,
-            help="Memadukan reputasi domain resmi bersama model ML leksikal. Default: OFF."
-        )
-
-        if sb_wl:
-            st.caption("🟢 **Mode Hybrid Aktif:** Domain resmi terverifikasi diproteksi via Trusted Whitelist layer.")
-        else:
-            st.caption("⚪ **Mode Murni ML Aktif (Default):** Deteksi 100% bergantung pada model fitur leksikal.")
+        st.write(f"**Ambang Terkalibrasi (THR):** `{calibrated_thr:.3f}` (Recall: {target_rec * 100:.0f}%)")
+        st.write(f"**Ambang Aktif:** `{calibrated_threshold:.3f}`")
+        st.write(f"**Layer Whitelist:** `{'🟢 ON (Hybrid)' if enable_whitelist else '⚪ OFF (Murni ML)'}`")
+        st.caption("💡 *Pengaturan threshold, whitelist, dan 31 fitur leksikal dapat disesuaikan pada tab:* **🎛️ Laboratorium Kustomisasi & Checklist Fitur**.")
 
         st.markdown("---")
         st.markdown("📌 **Fokus Utama (CIA Triad):**")
@@ -524,17 +484,93 @@ if st.session_state["current_page"] == "welcome":
             color: #94A3B8 !important;
         }
 
-        /* Metric Boxes / Step Cards di Welcoming Page */
-        .metric-box {
-            background: rgba(15, 23, 42, 0.8) !important;
-            backdrop-filter: blur(10px) !important;
-            border-radius: 14px !important;
-            border: 1px solid rgba(148, 163, 184, 0.25) !important;
-            color: #CBD5E1 !important;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.35) !important;
+        /* Pipeline Step Cards di Welcoming Page dengan Aksen Berwarna */
+        .pipeline-card-step1 {
+            background: linear-gradient(145deg, rgba(99, 102, 241, 0.22) 0%, rgba(15, 23, 42, 0.88) 100%) !important;
+            border: 1px solid rgba(129, 140, 248, 0.5) !important;
+            border-left: 6px solid #6366F1 !important;
+            border-radius: 16px !important;
+            padding: 24px 20px !important;
+            box-shadow: 0 10px 28px rgba(99, 102, 241, 0.25) !important;
+            height: 100% !important;
+            transition: transform 0.25s ease, box-shadow 0.25s ease !important;
         }
-        .metric-box p {
-            color: #CBD5E1 !important;
+        .pipeline-card-step1:hover {
+            transform: translateY(-4px) !important;
+            box-shadow: 0 16px 36px rgba(99, 102, 241, 0.4) !important;
+        }
+
+        .pipeline-card-step2 {
+            background: linear-gradient(145deg, rgba(6, 182, 212, 0.22) 0%, rgba(15, 23, 42, 0.88) 100%) !important;
+            border: 1px solid rgba(56, 189, 248, 0.5) !important;
+            border-left: 6px solid #06B6D4 !important;
+            border-radius: 16px !important;
+            padding: 24px 20px !important;
+            box-shadow: 0 10px 28px rgba(6, 182, 212, 0.25) !important;
+            height: 100% !important;
+            transition: transform 0.25s ease, box-shadow 0.25s ease !important;
+        }
+        .pipeline-card-step2:hover {
+            transform: translateY(-4px) !important;
+            box-shadow: 0 16px 36px rgba(6, 182, 212, 0.4) !important;
+        }
+
+        .pipeline-card-step3 {
+            background: linear-gradient(145deg, rgba(236, 72, 153, 0.22) 0%, rgba(15, 23, 42, 0.88) 100%) !important;
+            border: 1px solid rgba(244, 114, 182, 0.5) !important;
+            border-left: 6px solid #EC4899 !important;
+            border-radius: 16px !important;
+            padding: 24px 20px !important;
+            box-shadow: 0 10px 28px rgba(236, 72, 153, 0.25) !important;
+            height: 100% !important;
+            transition: transform 0.25s ease, box-shadow 0.25s ease !important;
+        }
+        .pipeline-card-step3:hover {
+            transform: translateY(-4px) !important;
+            box-shadow: 0 16px 36px rgba(236, 72, 153, 0.4) !important;
+        }
+
+        /* Badge Tahap Alur Kerja */
+        .pipeline-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 0.82rem;
+            margin-bottom: 12px;
+            letter-spacing: 0.5px;
+        }
+        .pipeline-badge-1 {
+            background: rgba(99, 102, 241, 0.35);
+            color: #C7D2FE;
+            border: 1px solid rgba(129, 140, 248, 0.6);
+        }
+        .pipeline-badge-2 {
+            background: rgba(6, 182, 212, 0.35);
+            color: #A5F3FC;
+            border: 1px solid rgba(56, 189, 248, 0.6);
+        }
+        .pipeline-badge-3 {
+            background: rgba(236, 72, 153, 0.35);
+            color: #FBCFE8;
+            border: 1px solid rgba(244, 114, 182, 0.6);
+        }
+
+        .pipeline-list {
+            list-style: none !important;
+            padding-left: 0 !important;
+            margin: 12px 0 0 0 !important;
+        }
+        .pipeline-list li {
+            padding: 6px 0 !important;
+            font-size: 0.93rem !important;
+            display: flex !important;
+            align-items: flex-start !important;
+            line-height: 1.5 !important;
+        }
+        .pipeline-list-bullet {
+            margin-right: 8px;
+            font-size: 1rem;
         }
 
         /* Teks subheader & judul di Welcoming Page */
@@ -620,49 +656,88 @@ if st.session_state["current_page"] == "welcome":
 
     st.markdown("---")
 
-    # Alur Kerja 3-Langkah
+    # Alur Kerja 3-Langkah dengan List Berwarna
     st.subheader("🔄 Alur Kerja Sistem Deteksi (3-Stage Defense Pipeline)")
     c_step1, c_step2, c_step3 = st.columns(3)
     with c_step1:
         st.markdown("""
-        <div class="metric-box" style="border-left-color: #6366F1;">
-            <h4 style="color: #6366F1; margin-top: 0;">Langkah 1: Ekstraksi Pasif 31 Fitur</h4>
-            <p>URL diurai secara murni dari struktur teks tanpa melakukan koneksi HTTP ke server tujuan. Parameter seperti entropi Shannon, kata kunci sensitif, tanda hubung host, dan ekstensi file diekstrak secara instan.</p>
+        <div class="pipeline-card-step1">
+            <span class="pipeline-badge pipeline-badge-1">⚡ TAHAP 1: EKSTRAKSI</span>
+            <h4 style="color: #A5B4FC; margin: 0 0 10px 0; font-size: 1.15rem;">Ekstraksi Pasif 31 Fitur</h4>
+            <p style="color: #CBD5E1; font-size: 0.92rem; line-height: 1.5; margin-bottom: 10px;">
+                URL diurai secara murni dari struktur teks tanpa koneksi HTTP aktif ke server tujuan (menjaga kerahasiaan / <i>zero data leak</i>).
+            </p>
+            <ul class="pipeline-list">
+                <li style="color: #E0E7FF;"><span class="pipeline-list-bullet" style="color: #818CF8;">🟣</span> <b>Entropi Shannon:</b> Menghitung tingkat keacakan string path & query</li>
+                <li style="color: #E0E7FF;"><span class="pipeline-list-bullet" style="color: #818CF8;">🟣</span> <b>Struktur Simbol:</b> Frekuensi karakter mencurigakan (<code>@</code>, <code>-</code>, <code>//</code>)</li>
+                <li style="color: #E0E7FF;"><span class="pipeline-list-bullet" style="color: #818CF8;">🟣</span> <b>Kata Kunci Phishing:</b> Pola perbankan, login, dan token verifikasi</li>
+                <li style="color: #E0E7FF;"><span class="pipeline-list-bullet" style="color: #818CF8;">🟣</span> <b>Deteksi Host IP:</b> Mengidentifikasi alamat IP mentah tanpa domain</li>
+            </ul>
         </div>
         """, unsafe_allow_html=True)
+
     with c_step2:
         st.markdown("""
-        <div class="metric-box" style="border-left-color: #3B82F6;">
-            <h4 style="color: #3B82F6; margin-top: 0;">Langkah 2: Layer 1 Whitelist Verification</h4>
-            <p>Domain dicocokkan dengan basis data reputasi entitas resmi (Google, Wikipedia, GitHub, BCA, Mandiri, dll.). Jika terdaftar dan valid, tautan otomatis dilindungi dari salah blokir demi menjaga <b>Availability</b>.</p>
+        <div class="pipeline-card-step2">
+            <span class="pipeline-badge pipeline-badge-2">🛡️ TAHAP 2: LAYER WHITELIST</span>
+            <h4 style="color: #67E8F9; margin: 0 0 10px 0; font-size: 1.15rem;">Filter Reputasi Whitelist</h4>
+            <p style="color: #CBD5E1; font-size: 0.92rem; line-height: 1.5; margin-bottom: 10px;">
+                Domain dicocokkan dengan basis data reputasi entitas resmi terpercaya untuk mengeliminasi risiko salah blokir.
+            </p>
+            <ul class="pipeline-list">
+                <li style="color: #CFFAFE;"><span class="pipeline-list-bullet" style="color: #06B6D4;">🔵</span> <b>Domain Terpercaya:</b> Google, Wikipedia, GitHub, BCA, Mandiri, dll.</li>
+                <li style="color: #CFFAFE;"><span class="pipeline-list-bullet" style="color: #06B6D4;">🔵</span> <b>Proteksi Availability:</b> Menjamin ketersediaan akses tanpa False Positive</li>
+                <li style="color: #CFFAFE;"><span class="pipeline-list-bullet" style="color: #06B6D4;">🔵</span> <b>Inspeksi Subdomain:</b> Validasi hierarki nama host resmi</li>
+                <li style="color: #CFFAFE;"><span class="pipeline-list-bullet" style="color: #06B6D4;">🔵</span> <b>Kustomisasi Fleksibel:</b> Dapat diaktifkan/dinonaktifkan di lab</li>
+            </ul>
         </div>
         """, unsafe_allow_html=True)
+
     with c_step3:
         st.markdown("""
-        <div class="metric-box" style="border-left-color: #EF4444;">
-            <h4 style="color: #EF4444; margin-top: 0;">Langkah 3: Layer 2 Machine Learning Triage</h4>
-            <p>Algoritma <b>HistGradientBoosting</b> mengevaluasi probabilitas bahaya terhadap ambang terkalibrasi (<code>0.880</code>). Sistem memberikan skoring risiko 3 tingkat dan rekomendasi mitigasi CIA Triad.</p>
+        <div class="pipeline-card-step3">
+            <span class="pipeline-badge pipeline-badge-3">🎯 TAHAP 3: ML INFERENCE</span>
+            <h4 style="color: #F472B6; margin: 0 0 10px 0; font-size: 1.15rem;">Klasifikasi Machine Learning</h4>
+            <p style="color: #CBD5E1; font-size: 0.92rem; line-height: 1.5; margin-bottom: 10px;">
+                Algoritma <b>HistGradientBoosting</b> mengevaluasi probabilitas bahaya terhadap ambang batas terkalibrasi.
+            </p>
+            <ul class="pipeline-list">
+                <li style="color: #FCE7F3;"><span class="pipeline-list-bullet" style="color: #EC4899;">🔴</span> <b>HistGradientBoosting:</b> Algoritma pohon keputusan mutakhir</li>
+                <li style="color: #FCE7F3;"><span class="pipeline-list-bullet" style="color: #EC4899;">🔴</span> <b>Threshold 0.880:</b> Ambang terkalibrasi menjamin recall 98%</li>
+                <li style="color: #FCE7F3;"><span class="pipeline-list-bullet" style="color: #EC4899;">🔴</span> <b>Skor Risiko 3 Tingkat:</b> Status AMAN, WASPADA, dan PHISHING</li>
+                <li style="color: #FCE7F3;"><span class="pipeline-list-bullet" style="color: #EC4899;">🔴</span> <b>Tindakan Mitigasi:</b> Panduan respon insiden keamanan & CIA Triad</li>
+            </ul>
         </div>
         """, unsafe_allow_html=True)
 
     st.markdown("---")
 
-    # Wawasan Ancaman & CIA Triad
+    # Wawasan Ancaman & CIA Triad dengan List Berwarna
     col_threat1, col_threat2 = st.columns([1.2, 1])
     with col_threat1:
-        st.subheader("⚠️ Fenomena Kejahatan Siber & Modus Phishing Modern")
         st.markdown("""
-        - **Penyalahgunaan Sertifikat SSL Gratis (Let's Encrypt):** Penyerang kini lazim memasang gembok hijau HTTPS pada situs phishing untuk mengelabui korban. Sistem ini membuktikan bahwa 29 fitur leksikal lainnya mampu mendeteksi phishing meskipun ber-HTTPS.
-        - **Typosquatting & IDN Homograph:** Penggunaan huruf visual serupa (*punycode* `xn--`) atau penambahan tanda hubung (misal: `paypal-security-update.com`) untuk meniru brand resmi.
-        - **Penyembunyian Domain via Shortener:** Memanfaatkan layanan `bit.ly` atau `tinyurl` untuk menyembunyikan alamat server palsu.
-        """)
+        <div style="background: linear-gradient(145deg, rgba(245, 158, 11, 0.18) 0%, rgba(15, 23, 42, 0.88) 100%); border: 1px solid rgba(245, 158, 11, 0.45); border-left: 6px solid #F59E0B; border-radius: 16px; padding: 22px 20px; height: 100%;">
+            <span class="pipeline-badge" style="background: rgba(245, 158, 11, 0.3); color: #FDE68A; border: 1px solid rgba(245, 158, 11, 0.6);">⚠️ THREAT LANDSCAPE</span>
+            <h4 style="color: #FDE68A; margin: 0 0 10px 0; font-size: 1.15rem;">Modus Kejahatan Siber & Phishing Modern</h4>
+            <ul class="pipeline-list">
+                <li style="color: #FEF3C7;"><span class="pipeline-list-bullet" style="color: #F59E0B;">🟠</span> <b>Penyalahgunaan SSL (HTTPS):</b> Situs penipu lazim menggunakan sertifikat SSL gratis untuk mengelabui korban. Model 31 fitur leksikal tetap membongkar kedoknya.</li>
+                <li style="color: #FEF3C7;"><span class="pipeline-list-bullet" style="color: #F59E0B;">🟠</span> <b>Typosquatting & Punycode:</b> Manipulasi huruf visual serupa (<code>xn--</code>) atau tanda hubung ganda (<code>paypal-verify-secure.com</code>).</li>
+                <li style="color: #FEF3C7;"><span class="pipeline-list-bullet" style="color: #F59E0B;">🟠</span> <b>Penyamaran via URL Shortener:</b> Eksploitasi <code>bit.ly</code> atau <code>tinyurl</code> untuk menyembunyikan domain host penyerang.</li>
+            </ul>
+        </div>
+        """, unsafe_allow_html=True)
     with col_threat2:
-        st.subheader("🛡️ Keterkaitan dengan CIA Triad")
         st.markdown("""
-        - 🔴 **Kerahasiaan (Confidentiality):** Mencegah pencurian kredensial akun, password, PIN, dan kode OTP perbankan.
-        - 🟡 **Integritas (Integrity):** Melindungi pengguna dari manipulasi alur sesi dan injeksi muatan skrip eksploit.
-        - 🟢 **Ketersediaan (Availability):** Whitelist reputasi menjamin domain sah tidak terblokir (*zero disruption*).
-        """)
+        <div style="background: linear-gradient(145deg, rgba(16, 185, 129, 0.18) 0%, rgba(15, 23, 42, 0.88) 100%); border: 1px solid rgba(16, 185, 129, 0.45); border-left: 6px solid #10B981; border-radius: 16px; padding: 22px 20px; height: 100%;">
+            <span class="pipeline-badge" style="background: rgba(16, 185, 129, 0.3); color: #A7F3D0; border: 1px solid rgba(16, 185, 129, 0.6);">🛡️ SECURITY PILLARS</span>
+            <h4 style="color: #A7F3D0; margin: 0 0 10px 0; font-size: 1.15rem;">Keterkaitan dengan CIA Triad</h4>
+            <ul class="pipeline-list">
+                <li style="color: #D1FAE5;"><span class="pipeline-list-bullet" style="color: #EF4444;">🔴</span> <b>Kerahasiaan (Confidentiality):</b> Mencegah kebocoran kata sandi, token 2FA, PIN, dan data kartu perbankan.</li>
+                <li style="color: #D1FAE5;"><span class="pipeline-list-bullet" style="color: #F59E0B;">🟡</span> <b>Integritas (Integrity):</b> Melindungi integritas sesi pengguna dari injeksi formulir palsu dan skrip eksploitasi.</li>
+                <li style="color: #D1FAE5;"><span class="pipeline-list-bullet" style="color: #10B981;">🟢</span> <b>Ketersediaan (Availability):</b> Whitelist reputasi menjamin domain resmi tidak terblokir salah (*Zero False Positive*).</li>
+            </ul>
+        </div>
+        """, unsafe_allow_html=True)
 
 # ------------------------------------------------------------------------------
 # 5B. MAIN APPLICATION DASHBOARD (TABS 1 - 5)
@@ -989,7 +1064,6 @@ Rekomendasi CIA    :
 
                 def _sync_tab_thr():
                     st.session_state["current_threshold"] = st.session_state["tab_thresh_slider"]
-                    st.session_state["sb_thresh_slider"] = st.session_state["tab_thresh_slider"]
 
                 tab_thr = st.slider(
                     "Pilih Ambang Batas (Threshold):",
@@ -1016,7 +1090,6 @@ Rekomendasi CIA    :
 
                 def _sync_tab_wl():
                     st.session_state["use_whitelist"] = st.session_state["tab_wl_toggle"]
-                    st.session_state["sb_wl_toggle"] = st.session_state["tab_wl_toggle"]
 
                 tab_wl = st.toggle(
                     "Aktifkan Whitelist Domain Resmi:",
