@@ -346,88 +346,220 @@ def check_domain_whitelist(url_string: str):
     except Exception:
         return False, None, None
 
-# Inisialisasi State Halaman Utama (Welcome vs App)
+# ------------------------------------------------------------------------------
+# Inisialisasi State Aplikasi (Halaman, Threshold, Whitelist)
+# ------------------------------------------------------------------------------
+calibrated_thr = float(model_artefak.get("threshold", 0.880))
+target_rec = float(model_artefak.get("target_recall", 0.98))
+
 if "current_page" not in st.session_state:
     st.session_state["current_page"] = "welcome"
 
+if "current_threshold" not in st.session_state:
+    st.session_state["current_threshold"] = calibrated_thr
+if "sb_thresh_slider" not in st.session_state:
+    st.session_state["sb_thresh_slider"] = calibrated_thr
+if "tab_thresh_slider" not in st.session_state:
+    st.session_state["tab_thresh_slider"] = calibrated_thr
+
+if "use_whitelist" not in st.session_state:
+    st.session_state["use_whitelist"] = False  # Default: OFF (Sesuai Permintaan)
+if "sb_wl_toggle" not in st.session_state:
+    st.session_state["sb_wl_toggle"] = False
+if "tab_wl_toggle" not in st.session_state:
+    st.session_state["tab_wl_toggle"] = False
+
+# Sinkronisasi Nilai Variabel Global Operasional
+calibrated_threshold = float(st.session_state["current_threshold"])
+enable_whitelist = bool(st.session_state["use_whitelist"])
+
 # ==============================================================================
 # 4. SIDEBAR: NAVIGASI, IDENTITAS & KONTROL SISTEM
+# (Sidebar HANYA dirender saat berada di Halaman Dashboard / App)
 # ==============================================================================
-with st.sidebar:
-    st.title("🛡️ Phishing Shield")
-    st.caption("Intelligent Web Threat Defense • HistGradientBoosting")
-    st.markdown("---")
+if st.session_state["current_page"] == "app":
+    with st.sidebar:
+        st.title("🛡️ Phishing Shield")
+        st.caption("Intelligent Web Threat Defense • HistGradientBoosting")
+        st.markdown("---")
 
-    # Kontrol Navigasi Halaman Utama
-    st.subheader("🧭 Navigasi Halaman")
-    nav_index = 0 if st.session_state["current_page"] == "welcome" else 1
-    selected_nav = st.radio(
-        "Pilih Halaman:",
-        ["🏠 Halaman Depan (Banner)", "🚀 Aplikasi Deteksi (Dashboard)"],
-        index=nav_index,
-        label_visibility="collapsed"
-    )
-    target_page = "welcome" if "Halaman Depan" in selected_nav else "app"
-    if target_page != st.session_state["current_page"]:
-        st.session_state["current_page"] = target_page
-        st.rerun()
+        # Kontrol Navigasi Kembali ke Halaman Depan
+        if st.button("🏠 Kembali ke Halaman Depan", use_container_width=True):
+            st.session_state["current_page"] = "welcome"
+            st.rerun()
 
-    st.markdown("---")
-    st.subheader("👥 Identitas Pengembang (Kelompok 1)")
-    st.markdown("""
-    - **Stevanus** (`38250029`)
-    - **Alra Nava Ratna Mandala** (`38250025`)
-    """)
-    st.info("**Mata Kuliah:** Keamanan Data (DSF01)\n\nProgram Artificial Intelligence — Semester 3")
+        st.markdown("---")
+        st.subheader("👥 Identitas Pengembang (Kelompok 1)")
+        st.markdown("""
+        - **Stevanus** (`38250029`)
+        - **Alra Nava Ratna Mandala** (`38250025`)
+        """)
+        st.info("**Mata Kuliah:** Keamanan Data (DSF01)\n\nProgram Artificial Intelligence — Semester 3")
 
-    st.markdown("---")
-    st.subheader("⚙️ Parameter Model Operasional")
-    st.write("**Algoritma:** HistGradientBoosting")
-    st.write("**Dimensi Fitur:** 31 Fitur Leksikal")
-    st.write("**Ukuran Artefak:** 0.21 MB (Ultra-Ringan)")
+        st.markdown("---")
+        st.subheader("⚙️ Parameter Model Operasional")
+        st.write("**Algoritma:** HistGradientBoosting")
+        st.write("**Dimensi Fitur:** 31 Fitur Leksikal")
+        st.write("**Ukuran Artefak:** 0.21 MB (Ultra-Ringan)")
 
-    calibrated_thr = float(model_artefak.get("threshold", 0.880))
-    target_rec = float(model_artefak.get("target_recall", 0.98))
+        def _sync_sb_thr():
+            st.session_state["current_threshold"] = st.session_state["sb_thresh_slider"]
+            st.session_state["tab_thresh_slider"] = st.session_state["sb_thresh_slider"]
 
-    thr_slider = st.slider(
-        "Ambang Batas Klasifikasi (Threshold):",
-        min_value=0.10,
-        max_value=0.98,
-        value=calibrated_thr,
-        step=0.01,
-        help=f"Ambang default terkalibrasi adalah {calibrated_thr:.3f} (menjamin recall {target_rec*100:.0f}% pada OOF data latih)."
-    )
+        sb_thr = st.slider(
+            "Ambang Batas Klasifikasi (Threshold):",
+            min_value=0.10,
+            max_value=0.98,
+            value=float(st.session_state["current_threshold"]),
+            step=0.01,
+            key="sb_thresh_slider",
+            on_change=_sync_sb_thr,
+            help=f"Ambang default terkalibrasi adalah {calibrated_thr:.3f} (menjamin recall {target_rec*100:.0f}% pada OOF data latih)."
+        )
 
-    if thr_slider == calibrated_thr:
-        st.success(f"🎯 Ambang Terkalibrasi: `{thr_slider:.3f}` (Recall: {target_rec * 100:.0f}%)")
-    else:
-        st.warning(f"⚠️ Ambang Kustom: `{thr_slider:.3f}` (Bawaan: `{calibrated_thr:.3f}`)")
+        if sb_thr == calibrated_thr:
+            st.success(f"🎯 Ambang Terkalibrasi: `{sb_thr:.3f}` (Recall: {target_rec * 100:.0f}%)")
+        else:
+            st.warning(f"⚠️ Ambang Kustom: `{sb_thr:.3f}` (Bawaan: `{calibrated_thr:.3f}`)")
 
-    st.markdown("---")
-    st.subheader("🛡️ Arsitektur Pertahanan (Hybrid)")
-    enable_whitelist = st.toggle(
-        "Aktifkan Whitelist Domain (Defense-in-Depth)",
-        value=True,
-        help="Memadukan reputasi domain resmi bersama model ML leksikal untuk mengeliminasi False Positive pada situs populer."
-    )
+        st.markdown("---")
+        st.subheader("🛡️ Arsitektur Pertahanan (Hybrid)")
 
-    if enable_whitelist:
-        st.caption("🟢 **Mode Hybrid Aktif:** Domain resmi terverifikasi diproteksi via Trusted Whitelist layer.")
-    else:
-        st.caption("⚪ **Mode Murni ML Aktif:** Deteksi 100% bergantung pada model fitur leksikal.")
+        def _sync_sb_wl():
+            st.session_state["use_whitelist"] = st.session_state["sb_wl_toggle"]
+            st.session_state["tab_wl_toggle"] = st.session_state["sb_wl_toggle"]
 
-    st.markdown("---")
-    st.markdown("📌 **Fokus Utama (CIA Triad):**")
-    st.caption("Melindungi **Confidentiality** dari pencurian kredensial, **Integrity** dari manipulasi form, dan **Availability** dari pemblokiran salah.")
+        sb_wl = st.toggle(
+            "Aktifkan Whitelist Domain (Defense-in-Depth)",
+            value=bool(st.session_state["use_whitelist"]),
+            key="sb_wl_toggle",
+            on_change=_sync_sb_wl,
+            help="Memadukan reputasi domain resmi bersama model ML leksikal. Default: OFF."
+        )
+
+        if sb_wl:
+            st.caption("🟢 **Mode Hybrid Aktif:** Domain resmi terverifikasi diproteksi via Trusted Whitelist layer.")
+        else:
+            st.caption("⚪ **Mode Murni ML Aktif (Default):** Deteksi 100% bergantung pada model fitur leksikal.")
+
+        st.markdown("---")
+        st.markdown("📌 **Fokus Utama (CIA Triad):**")
+        st.caption("Melindungi **Confidentiality** dari pencurian kredensial, **Integrity** dari manipulasi form, dan **Availability** dari pemblokiran salah.")
 
 # ==============================================================================
 # 5. HALAMAN UTAMA (KONDISIONAL: WELCOMING PAGE VS MAIN DASHBOARD)
 # ==============================================================================
 
 # ------------------------------------------------------------------------------
-# 5A. WELCOMING PAGE (HALAMAN DEPAN DENGAN BANNER & TOMBOL MULAI DI TENGAH)
+# 5A. WELCOMING PAGE (HALAMAN DEPAN DENGAN BANNER, CYBER BACKGROUND & SIDEBAR TERKUNCI)
 # ------------------------------------------------------------------------------
 if st.session_state["current_page"] == "welcome":
+    # CSS Khusus Welcoming Page: Mengunci Sidebar & Menghadirkan Latar Belakang Cyber Defense
+    st.markdown("""
+    <style>
+        /* 1. Sembunyikan & Kunci Sidebar Sepenuhnya di Welcoming Page */
+        [data-testid="stSidebar"],
+        [data-testid="collapsedControl"],
+        header[data-testid="stHeader"] button[data-testid="baseButton-header"],
+        div[data-testid="stSidebarCollapseButton"] {
+            display: none !important;
+        }
+
+        /* 2. Latar Belakang Welcoming Page: Cyber Defense Glowing Aesthetic (Bukan Putih Polos) */
+        .stApp, [data-testid="stAppViewContainer"] {
+            background: 
+                radial-gradient(circle at 15% 15%, rgba(99, 102, 241, 0.22) 0%, transparent 40%),
+                radial-gradient(circle at 85% 20%, rgba(168, 85, 247, 0.22) 0%, transparent 40%),
+                radial-gradient(circle at 50% 80%, rgba(6, 182, 212, 0.16) 0%, transparent 50%),
+                linear-gradient(180deg, #090e1a 0%, #050811 100%) !important;
+            background-attachment: fixed !important;
+            color: #F8FAFC !important;
+        }
+
+        /* Hero Banner Welcoming Page */
+        .hero-banner {
+            background: rgba(15, 23, 42, 0.82) !important;
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(99, 102, 241, 0.4) !important;
+            border-radius: 24px !important;
+            padding: 48px 36px !important;
+            margin-bottom: 28px !important;
+            text-align: center;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), 0 0 35px rgba(99, 102, 241, 0.25) !important;
+        }
+        .hero-banner h1 {
+            font-size: 2.8rem !important;
+            font-weight: 800 !important;
+            margin-bottom: 16px !important;
+            background: linear-gradient(90deg, #818CF8, #C084FC, #F472B6) !important;
+            -webkit-background-clip: text !important;
+            -webkit-text-fill-color: transparent !important;
+        }
+        .hero-banner p {
+            color: #E2E8F0 !important;
+            font-size: 1.18rem !important;
+            max-width: 880px !important;
+            margin: 0 auto 26px auto !important;
+            line-height: 1.7 !important;
+        }
+
+        /* KPI Card Styling di Welcoming Page */
+        .kpi-card {
+            background: rgba(15, 23, 42, 0.85) !important;
+            backdrop-filter: blur(12px) !important;
+            border: 1px solid rgba(99, 102, 241, 0.3) !important;
+            border-radius: 16px !important;
+            padding: 24px 16px !important;
+            text-align: center;
+            transition: all 0.3s ease !important;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4) !important;
+        }
+        .kpi-card:hover {
+            transform: translateY(-5px) !important;
+            border-color: rgba(129, 140, 248, 0.6) !important;
+            box-shadow: 0 15px 35px rgba(99, 102, 241, 0.3) !important;
+        }
+        .kpi-card p {
+            color: #94A3B8 !important;
+        }
+
+        /* Metric Boxes / Step Cards di Welcoming Page */
+        .metric-box {
+            background: rgba(15, 23, 42, 0.8) !important;
+            backdrop-filter: blur(10px) !important;
+            border-radius: 14px !important;
+            border: 1px solid rgba(148, 163, 184, 0.25) !important;
+            color: #CBD5E1 !important;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.35) !important;
+        }
+        .metric-box p {
+            color: #CBD5E1 !important;
+        }
+
+        /* Teks subheader & judul di Welcoming Page */
+        .stApp h1, .stApp h2, .stApp h3, .stApp h4, .stApp h5, .stApp p, .stApp li {
+            color: #F8FAFC !important;
+        }
+
+        /* Tombol Mulai yang Menonjol dan Berkilau */
+        div.stButton > button[kind="primary"] {
+            background: linear-gradient(135deg, #4F46E5 0%, #7C3AED 50%, #EC4899 100%) !important;
+            color: #FFFFFF !important;
+            border: 1px solid rgba(255, 255, 255, 0.4) !important;
+            border-radius: 14px !important;
+            padding: 18px 36px !important;
+            font-size: 1.25rem !important;
+            font-weight: 700 !important;
+            box-shadow: 0 10px 30px rgba(124, 58, 237, 0.55) !important;
+            transition: all 0.3s ease !important;
+        }
+        div.stButton > button[kind="primary"]:hover {
+            transform: translateY(-3px) scale(1.02) !important;
+            box-shadow: 0 16px 40px rgba(236, 72, 153, 0.7) !important;
+        }
+    </style>
+    """, unsafe_allow_html=True)
     st.markdown("""
     <div class="hero-banner">
         <h1>🛡️ Phishing Shield: Intelligent Web Threat Defense</h1>
@@ -546,7 +678,7 @@ else:
 
     tab_predict, tab_checklist, tab_batch, tab_analytics, tab_qa_whitelist = st.tabs([
         "🔍 Pindai URL Real-Time",
-        "🎛️ Kustomisasi Checklist Fitur",
+        "🎛️ Laboratorium Kustomisasi & Checklist Fitur",
         "📁 Pemindaian Massal (Batch)",
         "📊 Analisis Model & Data",
         "🧪 Validasi QA & Whitelist"
@@ -627,7 +759,7 @@ else:
                 # Prediksi Model
                 p_phish = float(model_artefak["model"].predict_proba(features_df)[:, 1][0])
                 p_legit = float(1.0 - p_phish)
-                thr = float(thr_slider)
+                thr = calibrated_threshold
 
                 if p_phish >= thr:
                     ml_risk_level = "TINGGI (blokir)"
@@ -835,7 +967,7 @@ Rekomendasi CIA    :
     with tab_checklist:
         st.title("🎛️ Laboratorium Kustomisasi & Checklist Fitur (Ablasi Interaktif)")
         st.markdown("""
-        Fitur ini memungkinkan Anda **mengaktifkan atau menonaktifkan fitur leksikal tertentu** guna menguji sensitivitas model:
+        Fitur ini memungkinkan Anda **mengonfigurasi ambang batas (threshold), memodifikasi layer whitelist, serta mengaktifkan/menonaktifkan 31 fitur leksikal** guna menguji sensitivitas model:
         - *Bagaimana jika fitur `has_https` dan `has_www` dimatikan? Apakah model tetap mampu mendeteksi phishing modern ber-SSL?*
         - *Bagaimana jika indikator kata kunci sensitif diabaikan?*
         Ketika fitur dinonaktifkan, nilainya akan **dinetralkan ke baseline aman** (*feature masking*).
@@ -843,7 +975,63 @@ Rekomendasi CIA    :
 
         st.markdown("---")
 
-        # Inisialisasi State Checkbox untuk setiap fitur
+        # 1. Parameter Deteksi Global dalam Dropdown (Threshold & Whitelist)
+        st.write("##### 🎛️ Parameter Deteksi Operasional:")
+        col_param1, col_param2 = st.columns(2)
+        with col_param1:
+            with st.expander("🎯 Pengaturan Ambang Batas Klasifikasi (Threshold)", expanded=False):
+                st.markdown("""
+                Sesuaikan sensitivitas ambang probabilitas klasifikasi (*decision threshold*):
+                - **Ambang Rendah (< 0.50)**: Sangat sensitif (*high recall*), namun berisiko memicu *False Positive*.
+                - **Ambang Terkalibrasi (0.880)**: Nilai optimal rekomendasi sistem (Recall 98% pada OOF).
+                - **Ambang Tinggi (> 0.90)**: Konservatif, memprioritaskan kepastian (*high precision*).
+                """)
+
+                def _sync_tab_thr():
+                    st.session_state["current_threshold"] = st.session_state["tab_thresh_slider"]
+                    st.session_state["sb_thresh_slider"] = st.session_state["tab_thresh_slider"]
+
+                tab_thr = st.slider(
+                    "Pilih Ambang Batas (Threshold):",
+                    min_value=0.10,
+                    max_value=0.98,
+                    value=float(st.session_state["current_threshold"]),
+                    step=0.01,
+                    key="tab_thresh_slider",
+                    on_change=_sync_tab_thr,
+                    help=f"Ambang bawaan terkalibrasi: {calibrated_thr:.3f}"
+                )
+                if tab_thr == calibrated_thr:
+                    st.success(f"🎯 Ambang Terkalibrasi Aktif: `{tab_thr:.3f}` (Recall: {target_rec * 100:.0f}%)")
+                else:
+                    st.warning(f"⚠️ Ambang Kustom Aktif: `{tab_thr:.3f}` (Bawaan: `{calibrated_thr:.3f}`)")
+
+        with col_param2:
+            with st.expander("🛡️ Pengaturan Mode Whitelist Domain Terpercaya (Defense-in-Depth)", expanded=False):
+                st.markdown("""
+                Konfigurasi lapisan keamanan **Layer 1: Trusted Whitelist Reputation**:
+                - **OFF (Default Bawaan)**: Deteksi **100% murni model Machine Learning** leksikal tanpa bantuan filter reputasi eksternal.
+                - **ON**: Mode *Hybrid Defense-in-Depth*. Domain resmi terverifikasi (misal: `google.com`, `paypal.com`) langsung dilindungi dari *False Positive*.
+                """)
+
+                def _sync_tab_wl():
+                    st.session_state["use_whitelist"] = st.session_state["tab_wl_toggle"]
+                    st.session_state["sb_wl_toggle"] = st.session_state["tab_wl_toggle"]
+
+                tab_wl = st.toggle(
+                    "Aktifkan Whitelist Domain Resmi:",
+                    value=bool(st.session_state["use_whitelist"]),
+                    key="tab_wl_toggle",
+                    on_change=_sync_tab_wl
+                )
+                if tab_wl:
+                    st.info("🟢 **Mode Whitelist ON**: Domain resmi terverifikasi diproteksi oleh layer reputasi.")
+                else:
+                    st.caption("⚪ **Mode Whitelist OFF (Default)**: Model murni mengevaluasi fitur leksikal URL secara independen.")
+
+        st.markdown("---")
+
+        # 2. Inisialisasi State Checkbox untuk setiap fitur
         for feat in FITUR:
             if f"chk_{feat}" not in st.session_state:
                 st.session_state[f"chk_{feat}"] = True
@@ -898,13 +1086,30 @@ Rekomendasi CIA    :
                         )
                     st.write("")
 
-        # Evaluasi Uji Coba Dampak Masking Fitur
+        # 3. Evaluasi Uji Coba Dampak Masking Fitur
         st.markdown("---")
         st.subheader("🧪 Uji Coba Dampak Masking Fitur pada URL Tertentu")
+        st.markdown("""
+        Uji dampak penonaktifan fitur (*ablation study*) terhadap tautan kustom pilihan Anda.
+        Sistem akan menganalisis probabilitas model penuh vs model kustom, mengklasifikasikan status ancaman (**Phishing** atau **Legit / Aman**), serta memberikan panduan **tindakan mitigasi keamanan**.
+        """)
+
+        # Tombol preset URL contoh untuk uji ablasi
+        st.write("##### ⚡ Pilih Contoh URL Cepat untuk Pengujian Ablasi:")
+        c_ex1, c_ex2, c_ex3 = st.columns(3)
+        with c_ex1:
+            if st.button("🚨 Paypal Spoof (Phishing)", key="btn_abl_phish", use_container_width=True):
+                st.session_state["abl_test_input"] = "http://paypal-secure-update.example.com/webscr/login?confirm=1"
+        with c_ex2:
+            if st.button("🚨 IP Login Portal (Phishing)", key="btn_abl_ip", use_container_width=True):
+                st.session_state["abl_test_input"] = "http://192.168.10.5/secure-login/verify-account.php?id=1"
+        with c_ex3:
+            if st.button("🌐 Wikipedia Artikel (Legit)", key="btn_abl_legit", use_container_width=True):
+                st.session_state["abl_test_input"] = "https://www.wikipedia.org/wiki/Keamanan_komputer"
 
         test_abl_url = st.text_input(
             "Masukkan URL untuk diuji perbandingannya:",
-            value="http://paypal-secure-update.example.com/webscr/login?confirm=1",
+            value=st.session_state.get("abl_test_input", "http://paypal-secure-update.example.com/webscr/login?confirm=1"),
             key="abl_test_input"
         )
 
@@ -925,18 +1130,144 @@ Rekomendasi CIA    :
             df_masked = pd.DataFrame([masked_vec], columns=model_artefak["fitur"], dtype="float32")
             prob_masked = float(model_artefak["model"].predict_proba(df_masked)[:, 1][0])
 
+            cur_thr = float(st.session_state.get("current_threshold", calibrated_thr))
+            cur_wl = bool(st.session_state.get("use_whitelist", False))
+
+            # Whitelist check jika layer whitelist diaktifkan
+            is_wl, w_domain, w_org = check_domain_whitelist(test_abl_url) if cur_wl else (False, None, None)
+
+            # Klasifikasi Model Penuh (31 Fitur)
+            if cur_wl and is_wl:
+                status_full = "AMAN (WHITELIST)"
+                is_phish_full = False
+            elif prob_full >= cur_thr:
+                status_full = "PHISHING"
+                is_phish_full = True
+            elif prob_full >= 0.50:
+                status_full = "WASPADA"
+                is_phish_full = False
+            else:
+                status_full = "LEGIT (AMAN)"
+                is_phish_full = False
+
+            # Klasifikasi Model Masked (Kustom)
+            if cur_wl and is_wl:
+                status_masked = "AMAN (WHITELIST)"
+                is_phish_masked = False
+            elif prob_masked >= cur_thr:
+                status_masked = "PHISHING"
+                is_phish_masked = True
+            elif prob_masked >= 0.50:
+                status_masked = "WASPADA"
+                is_phish_masked = False
+            else:
+                status_masked = "LEGIT (AMAN)"
+                is_phish_masked = False
+
+            # Tampilkan metrik perbandingan
             col_comp1, col_comp2, col_comp3 = st.columns(3)
             with col_comp1:
-                st.metric("Skor Model Penuh (31 Fitur)", f"{prob_full * 100:.1f}%", "100% Fitur Aktif")
+                st.metric(
+                    "Skor Model Penuh (31 Fitur)",
+                    f"{prob_full * 100:.1f}%",
+                    f"Status: {status_full}"
+                )
             with col_comp2:
-                st.metric("Skor Model Masked (Kustom)", f"{prob_masked * 100:.1f}%", f"{len(active_now)} Fitur Aktif")
+                st.metric(
+                    f"Skor Model Masked ({len(active_now)} Fitur)",
+                    f"{prob_masked * 100:.1f}%",
+                    f"Status: {status_masked}"
+                )
             with col_comp3:
                 delta_val = (prob_masked - prob_full) * 100
                 st.metric("Pergeseran Probabilitas (Shift)", f"{delta_val:+.1f}%", "Dampak Masking")
 
             if len(active_now) < 31:
                 disabled_feats = [f for f in FITUR if f not in active_now]
-                st.caption(f"Fitur yang dinonaktifkan: {', '.join(disabled_feats)}")
+                st.caption(f"🔧 **Fitur yang dinonaktifkan:** {', '.join(disabled_feats)}")
+
+            # Visual Status Banner untuk Hasil Deteksi URL Kustom
+            st.markdown("#### 🎯 Hasil Klasifikasi & Status Keamanan URL:")
+            if status_full == "PHISHING":
+                st.markdown(f"""
+                <div class="status-card-danger">
+                    <h3>🚨 STATUS: TERINDIKASI SEBAGAI TAUTAN PHISHING</h3>
+                    <p style="margin: 6px 0 0 0; font-size: 1.05rem;">
+                        Model memprediksi probabilitas ancaman sebesar <b>{prob_full*100:.1f}%</b> (melebihi ambang batas bahaya <b>{cur_thr:.3f}</b>). 
+                        Tautan ini terdeteksi memiliki karakteristik leksikal mencurigakan yang dirancang untuk mengelabui korban atau mencuri data sensitif.
+                    </p>
+                </div>
+                """, unsafe_allow_html=True)
+            elif status_full == "WASPADA":
+                st.markdown(f"""
+                <div class="status-card-warning">
+                    <h3>⚠️ STATUS: WASPADA / ANOMALI LEKSIKAL TERDETEKSI</h3>
+                    <p style="margin: 6px 0 0 0; font-size: 1.05rem;">
+                        Probabilitas ancaman sebesar <b>{prob_full*100:.1f}%</b> (berada di zona transisi antara 50% dan ambang batas <b>{cur_thr:.3f}</b>). 
+                        Struktur URL menunjukkan pola tidak wajar meskipun belum secara definitif memenuhi kriteria pemblokiran otomatis.
+                    </p>
+                </div>
+                """, unsafe_allow_html=True)
+            elif status_full == "AMAN (WHITELIST)":
+                st.markdown(f"""
+                <div class="status-card-hybrid">
+                    <h3>🛡️ STATUS: AMAN (TERVERIFIKASI BASIS DATA WHITELIST)</h3>
+                    <p style="margin: 6px 0 0 0; font-size: 1.05rem;">
+                        Domain terdaftar resmi dalam whitelist reputasi terpercaya: <b>{w_org}</b>. Tautan dilindungi dari False Positive demi menjamin Availability.
+                    </p>
+                </div>
+                """, unsafe_allow_html=True)
+            else:
+                st.markdown(f"""
+                <div class="status-card-safe">
+                    <h3>✅ STATUS: TAUTAN AMAN / LEGITIMATE (RISIKO RENDAH)</h3>
+                    <p style="margin: 6px 0 0 0; font-size: 1.05rem;">
+                        Probabilitas ancaman hanya <b>{prob_full*100:.1f}%</b> (jauh di bawah ambang batas risiko <b>{cur_thr:.3f}</b>). 
+                        Tidak ditemukan anomali atau tanda-tanda manipulasi leksikal yang mengindikasikan rekayasa sosial phishing.
+                    </p>
+                </div>
+                """, unsafe_allow_html=True)
+
+            # Evasion Insight Alert jika masking mengubah hasil prediksi
+            if status_full != status_masked:
+                st.warning(f"""
+                ⚠️ **Wawasan Evasion (Dampak Masking Fitur):**
+                Penonaktifan fitur mengubah status dari **{status_full}** menjadi **{status_masked}** (pergeseran {delta_val:+.1f}%).
+                Hal ini membuktikan bahwa fitur yang dinonaktifkan memegang peranan krusial bagi model dalam mengidentifikasi taktik penyamaran penyerang pada tautan ini.
+                """)
+
+            # Panduan Tindakan Mitigasi
+            st.markdown("#### 🛡️ Rekomendasi Tindakan Mitigasi Keamanan:")
+            if is_phish_full or status_full == "PHISHING":
+                st.error("""
+                **Tindakan Mitigasi Ancaman Phishing Segera (Immediate Action):**
+                1. 🛑 **JANGAN KLIK / HINDARI AKSES**: Jangan membuka tautan ini pada browser normal untuk menghindari pengunduhan malware diam-diam (*drive-by download*) atau rekayasa sosial.
+                2. 🔒 **JANGAN MASUKKAN DATA PRIBADI**: Jangan pernah mengisi kolom login, email, password, nomor kartu debit/kredit, PIN, atau kode OTP pada halaman tujuan.
+                3. 🛡️ **Blokir pada Tingkat Jaringan (SOC / Network Admin)**:
+                   - Masukkan domain/IP ini ke dalam *DNS Sinkhole* atau *Firewall Blacklist* perusahaan/kampus.
+                   - Pasang aturan pemblokiran pada *Secure Web Gateway (SWG)* atau *Web Application Firewall (WAF)*.
+                   - Laporkan URL ke penyedia perlindungan publik: *Google Safe Browsing*, *Microsoft SmartScreen*, dan *PhishTank*.
+                4. 🚨 **Langkah Darurat (Jika Sudah Terlanjur Diklik / Menginput Kredensial)**:
+                   - **Reset Password Segera**: Ubah kata sandi akun terkait melalui kanal resmi dan perangkat lain yang aman.
+                   - **Revoke Active Sessions**: Hentikan/putuskan semua sesi login aktif pada pengaturan keamanan akun.
+                   - **Aktifkan MFA**: Aktifkan verifikasi 2 langkah (Multi-Factor Authentication) menggunakan aplikasi Authenticator atau Security Key (FIDO2).
+                   - **Pemindaian Perangkat**: Jalankan pemindaian antivirus / anti-malware lengkap pada perangkat Anda.
+                """)
+            elif status_full == "WASPADA":
+                st.warning("""
+                **Tindakan Mitigasi Tautan Waspada / Anomali (Precautionary Action):**
+                1. 🔍 **Verifikasi Nama Domain**: Periksa dengan seksama ejaan domain. Waspadai huruf pengganti (*typosquatting*) atau subdomain panjang berkedok nama brand terkenal.
+                2. 🕵️ **Cek Usia Domain (WHOIS)**: Domain phishing biasanya baru didaftarkan dalam waktu beberapa hari/minggu.
+                3. 🧪 **Analisis Terisolasi**: Jika tautan wajib dibuka untuk keperluan riset, gunakan *Browser Sandbox* atau lingkungan mesin virtual (VM) terisolasi tanpa akses ke data pribadi.
+                4. 🚫 **Hindari Mengunduh Berkas**: Jangan mengeksekusi file dengan ekstensi ganda atau mencurigakan (seperti `.exe`, `.zip`, `.scr`, `.html`) yang diunduh dari situs tersebut.
+                """)
+            else:
+                st.success("""
+                **Pedoman Keamanan Tautan Legit / Aman (Cyber Hygiene Best Practices):**
+                1. 🔒 **Pertahankan Prinsip Zero-Trust**: Meskipun tautan terindikasi aman secara leksikal, selalu pastikan situs menggunakan protokol HTTPS dengan sertifikat SSL/TLS terbitan Certificate Authority (CA) resmi.
+                2. 🌐 **Verifikasi Alamat Resmi**: Selalu akses layanan perbankan, media sosial, atau portal kampus melalui *bookmark* pribadi atau aplikasi resmi, bukan melalui tautan acak di SMS, WhatsApp, atau email promosi.
+                3. 💡 **Edukasi Anti-Phishing**: Tetap waspada terhadap permintaan transfer uang, perubahan kata sandi mendadak, atau pesan bernada mendesak (*urgency-based social engineering*).
+                """)
 
     # --------------------------------------------------------------------------
     # TAB 3: PEMINDAIAN MASSAL (BATCH SCANNER DENGAN TEMPLATE & STATUS BERSIH)
@@ -994,7 +1325,7 @@ http://archive.org/web/"""
                 with st.spinner(f"Memindai {len(urls_to_scan)} URL..."):
                     t_batch_start = time.time()
                     batch_results = []
-                    thr_b = float(thr_slider)
+                    thr_b = calibrated_threshold
 
                     for u in urls_to_scan:
                         vec = ekstrak_satu(u)
