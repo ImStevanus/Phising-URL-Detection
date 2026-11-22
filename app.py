@@ -1237,29 +1237,9 @@ Rekomendasi CIA    :
                 status_masked = "LEGIT (AMAN)"
                 is_phish_masked = False
 
-            # Tampilkan metrik perbandingan
-            col_comp1, col_comp2, col_comp3 = st.columns(3)
-            with col_comp1:
-                st.metric(
-                    "Skor Model Penuh (31 Fitur)",
-                    f"{prob_full * 100:.1f}%",
-                    f"Status: {status_full}"
-                )
-            with col_comp2:
-                st.metric(
-                    f"Skor Model Masked ({len(active_now)} Fitur)",
-                    f"{prob_masked * 100:.1f}%",
-                    f"Status: {status_masked}"
-                )
-            with col_comp3:
-                delta_val = (prob_masked - prob_full) * 100
-                st.metric("Pergeseran Probabilitas (Shift)", f"{delta_val:+.1f}%", "Dampak Masking")
-
-            if len(active_now) < 31:
-                disabled_feats = [f for f in FITUR if f not in active_now]
-                st.caption(f"🔧 **Fitur yang dinonaktifkan:** {', '.join(disabled_feats)}")
-
+            # ------------------------------------------------------------------
             # Visual Status Banner untuk Hasil Deteksi URL Kustom
+            # ------------------------------------------------------------------
             st.markdown("#### 🎯 Hasil Klasifikasi & Status Keamanan URL:")
             if status_full == "PHISHING":
                 st.markdown(f"""
@@ -1300,6 +1280,196 @@ Rekomendasi CIA    :
                     </p>
                 </div>
                 """, unsafe_allow_html=True)
+
+            # ------------------------------------------------------------------
+            # Spidometer Gauge Risiko Phishing (Plotly)
+            # ------------------------------------------------------------------
+            st.markdown("#### ⏱️ Speedometer Risiko Phishing (Model Penuh vs Model Kustom):")
+            col_gauge1, col_gauge2 = st.columns(2)
+
+            with col_gauge1:
+                bar_color_full = "#EF4444" if status_full == "PHISHING" else ("#F59E0B" if status_full == "WASPADA" else "#22C55E")
+                fig_gauge_full = go.Figure(go.Indicator(
+                    mode="gauge+number",
+                    value=round(prob_full * 100, 1),
+                    domain={'x': [0, 1], 'y': [0, 1]},
+                    title={'text': "Model Penuh (31 Fitur Aktif)", 'font': {'size': 16, 'color': '#818CF8'}},
+                    number={'suffix': "%", 'font': {'size': 32, 'color': '#F8FAFC'}},
+                    gauge={
+                        'axis': {'range': [0, 100], 'tickwidth': 1, 'tickcolor': "gray"},
+                        'bar': {'color': bar_color_full, 'thickness': 0.3},
+                        'bgcolor': "rgba(128,128,128,0.1)",
+                        'borderwidth': 1,
+                        'bordercolor': "gray",
+                        'steps': [
+                            {'range': [0, (cur_thr / 2) * 100], 'color': "rgba(34, 197, 94, 0.25)"},
+                            {'range': [(cur_thr / 2) * 100, cur_thr * 100], 'color': "rgba(245, 158, 11, 0.25)"},
+                            {'range': [cur_thr * 100, 100], 'color': "rgba(239, 68, 68, 0.25)"}
+                        ],
+                        'threshold': {
+                            'line': {'color': "red", 'width': 3},
+                            'thickness': 0.75,
+                            'value': cur_thr * 100
+                        }
+                    }
+                ))
+                fig_gauge_full.update_layout(
+                    height=240,
+                    margin=dict(l=20, r=20, t=35, b=10),
+                    paper_bgcolor="rgba(0,0,0,0)",
+                    plot_bgcolor="rgba(0,0,0,0)",
+                    font={'color': '#F8FAFC'}
+                )
+                st.plotly_chart(fig_gauge_full, use_container_width=True)
+
+            with col_gauge2:
+                bar_color_masked = "#EF4444" if status_masked == "PHISHING" else ("#F59E0B" if status_masked == "WASPADA" else "#22C55E")
+                fig_gauge_masked = go.Figure(go.Indicator(
+                    mode="gauge+number+delta",
+                    value=round(prob_masked * 100, 1),
+                    delta={
+                        'reference': round(prob_full * 100, 1),
+                        'valueformat': ".1f",
+                        'suffix': "%",
+                        'increasing': {'color': "#EF4444"},
+                        'decreasing': {'color': "#22C55E"}
+                    },
+                    domain={'x': [0, 1], 'y': [0, 1]},
+                    title={'text': f"Model Masked ({len(active_now)} Fitur Aktif)", 'font': {'size': 16, 'color': '#EC4899'}},
+                    number={'suffix': "%", 'font': {'size': 32, 'color': '#F8FAFC'}},
+                    gauge={
+                        'axis': {'range': [0, 100], 'tickwidth': 1, 'tickcolor': "gray"},
+                        'bar': {'color': bar_color_masked, 'thickness': 0.3},
+                        'bgcolor': "rgba(128,128,128,0.1)",
+                        'borderwidth': 1,
+                        'bordercolor': "gray",
+                        'steps': [
+                            {'range': [0, (cur_thr / 2) * 100], 'color': "rgba(34, 197, 94, 0.25)"},
+                            {'range': [(cur_thr / 2) * 100, cur_thr * 100], 'color': "rgba(245, 158, 11, 0.25)"},
+                            {'range': [cur_thr * 100, 100], 'color': "rgba(239, 68, 68, 0.25)"}
+                        ],
+                        'threshold': {
+                            'line': {'color': "red", 'width': 3},
+                            'thickness': 0.75,
+                            'value': cur_thr * 100
+                        }
+                    }
+                ))
+                fig_gauge_masked.update_layout(
+                    height=240,
+                    margin=dict(l=20, r=20, t=35, b=10),
+                    paper_bgcolor="rgba(0,0,0,0)",
+                    plot_bgcolor="rgba(0,0,0,0)",
+                    font={'color': '#F8FAFC'}
+                )
+                st.plotly_chart(fig_gauge_masked, use_container_width=True)
+
+            # ------------------------------------------------------------------
+            # Metrik Ringkasan Perbandingan
+            # ------------------------------------------------------------------
+            col_comp1, col_comp2, col_comp3 = st.columns(3)
+            with col_comp1:
+                st.metric(
+                    "Skor Model Penuh (31 Fitur)",
+                    f"{prob_full * 100:.1f}%",
+                    f"Status: {status_full}"
+                )
+            with col_comp2:
+                st.metric(
+                    f"Skor Model Masked ({len(active_now)} Fitur)",
+                    f"{prob_masked * 100:.1f}%",
+                    f"Status: {status_masked}"
+                )
+            with col_comp3:
+                delta_val = (prob_masked - prob_full) * 100
+                st.metric("Pergeseran Probabilitas (Shift)", f"{delta_val:+.1f}%", "Dampak Masking")
+
+            if len(active_now) < 31:
+                disabled_feats = [f for f in FITUR if f not in active_now]
+                st.caption(f"🔧 **Fitur yang dinonaktifkan:** {', '.join(disabled_feats)}")
+
+            # ------------------------------------------------------------------
+            # Reasoning Engine untuk URL Kustom (Analisis Heuristik Dinamis)
+            # ------------------------------------------------------------------
+            st.markdown("#### 🔍 Indikator Heuristik Deteksi (Reasoning Engine):")
+            st.caption("Pemeriksaan karakteristik leksikal tautan secara dinamis untuk mengidentifikasi pola anomali spesifik:")
+
+            r_kustom = df_full.iloc[0]
+            alasan_kustom = []
+
+            # 1. Indikator Bahaya Tinggi
+            if r_kustom.host_is_ip == 1:
+                alasan_kustom.append(("danger", "Domain berupa alamat IP langsung (menghindari proses registrasi nama domain resmi)"))
+            if r_kustom.has_punycode == 1:
+                alasan_kustom.append(("danger", "Domain punycode 'xn--' terdeteksi (indikasi teknik serangan IDN Homograph)"))
+            if r_kustom.n_at >= 1:
+                alasan_kustom.append(("danger", f"Memuat simbol '@' ({int(r_kustom.n_at)}x) untuk mengelabui pembacaan nama host"))
+            if r_kustom.n_keyword >= 2:
+                alasan_kustom.append(("danger", f"Memuat {int(r_kustom.n_keyword)} kata kunci sensitif perbankan/login (rekayasa sosial)"))
+            elif r_kustom.n_keyword == 1:
+                alasan_kustom.append(("danger", "Memuat kata kunci sensitif verifikasi/keuangan (login/verify/update)"))
+            if r_kustom.ext_risky == 1:
+                alasan_kustom.append(("danger", "Mengarah langsung ke ekstensi berkas skrip berisiko (.php, .exe, .asp, dll)"))
+
+            # 2. Indikator Waspada / Anomali Menengah
+            if r_kustom.has_shortener == 1:
+                alasan_kustom.append(("warning", "Menggunakan layanan penyingkat tautan (URL Shortener) untuk menyembunyikan domain asli"))
+            if r_kustom.host_hyphens >= 2:
+                alasan_kustom.append(("warning", f"Hostname memuat {int(r_kustom.host_hyphens)} tanda hubung (-) (indikasi peniruan brand / typosquatting)"))
+            elif r_kustom.host_hyphens == 1:
+                alasan_kustom.append(("warning", "Hostname memuat tanda hubung (-) sebagai pemisah nama"))
+            if r_kustom.n_subdomain >= 3:
+                alasan_kustom.append(("warning", f"Struktur subdomain bertingkat tinggi ({int(r_kustom.n_subdomain)} level subdomain)"))
+            if r_kustom.url_len > 100:
+                alasan_kustom.append(("warning", f"Panjang URL ekstrem ({int(r_kustom.url_len)} karakter) sering digunakan menyembunyikan payload"))
+            if r_kustom.double_slash_path == 1:
+                alasan_kustom.append(("warning", "Terdapat karakter double-slash (//) di dalam jalur path URL"))
+            if r_kustom.url_entropy > 4.5:
+                alasan_kustom.append(("warning", f"Entropi Shannon URL tinggi ({r_kustom.url_entropy:.2f} bit) menandakan keacakan token/path"))
+            if r_kustom.host_entropy > 3.8:
+                alasan_kustom.append(("warning", f"Entropi Shannon hostname tinggi ({r_kustom.host_entropy:.2f} bit) indikasi algoritma DGA"))
+            if r_kustom.digit_ratio > 0.25:
+                alasan_kustom.append(("warning", f"Kepadatan digit/angka tinggi ({r_kustom.digit_ratio*100:.1f}% dari URL)"))
+            if r_kustom.special_ratio > 0.20:
+                alasan_kustom.append(("warning", f"Kepadatan karakter khusus tinggi ({r_kustom.special_ratio*100:.1f}%)"))
+            if r_kustom.has_https == 0:
+                alasan_kustom.append(("warning", "Tidak menggunakan protokol aman HTTPS (protokol HTTP biasa tanpa enkripsi TLS)"))
+            if r_kustom.has_www == 0:
+                alasan_kustom.append(("warning", "Tidak menggunakan subdomain standar 'www'"))
+
+            # Jika tidak ada anomali terdeteksi
+            if not alasan_kustom:
+                alasan_kustom.append(("safe", "Struktur leksikal URL bersih, proporsional, dan sesuai dengan standar situs web resmi."))
+
+            # Tampilkan indikator alasan sebagai pill badges
+            for level, pesan in alasan_kustom:
+                if level == "danger":
+                    st.markdown(f'<span class="pill-badge pill-danger">🔴 {pesan}</span>', unsafe_allow_html=True)
+                elif level == "warning":
+                    st.markdown(f'<span class="pill-badge pill-warning">🟡 {pesan}</span>', unsafe_allow_html=True)
+                else:
+                    st.markdown(f'<span class="pill-badge pill-safe">🟢 {pesan}</span>', unsafe_allow_html=True)
+
+            # Catatan status penonaktifan heuristik jika ada fitur terkait yang dimask
+            if len(active_now) < 31:
+                masked_heuristics = []
+                if "has_https" not in active_now:
+                    masked_heuristics.append("Protokol HTTPS dinetralkan (penalti non-SSL diabaikan)")
+                if "has_www" not in active_now:
+                    masked_heuristics.append("Pemeriksaan www dinetralkan")
+                if "n_keyword" not in active_now:
+                    masked_heuristics.append("Pemeriksaan kata kunci sensitif dinetralkan")
+                if "host_is_ip" not in active_now:
+                    masked_heuristics.append("Pemeriksaan IP langsung dinetralkan")
+                if "host_hyphens" not in active_now:
+                    masked_heuristics.append("Pemeriksaan tanda hubung typosquatting dinetralkan")
+                if "has_shortener" not in active_now:
+                    masked_heuristics.append("Pemeriksaan shortener dinetralkan")
+
+                if masked_heuristics:
+                    st.info(f"💡 **Pengaruh Feature Masking pada Heuristik:** {', '.join(masked_heuristics)}.")
+
+            st.write("")
 
             # Evasion Insight Alert jika masking mengubah hasil prediksi
             if status_full != status_masked:
